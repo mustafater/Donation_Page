@@ -1,0 +1,34 @@
+---
+import "../styles/global.css";
+
+const { title = "Hilal Kurban | Güvenilir Kurban Bağışı" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Kurban bağışınızı ihtiyaç sahiplerine ulaştıran, Web3 entegrasyonuna hazır modern bağış platformu."
+    />
+    <script is:inline>
+      const storedTheme = localStorage.getItem("theme");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (storedTheme === "dark" || (!storedTheme && prefersDark)) {
+        document.documentElement.classList.add("dark");
+      }
+      const storedLocale = localStorage.getItem("locale");
+      if (storedLocale === "tr" || storedLocale === "en") {
+        document.documentElement.lang = storedLocale;
+      }
+    </script>
+    <title>{title}</title>
+  </head>
+  <body>
+    <div class="page-shell">
+      <slot />
+    </div>
+  </body>
+</html>

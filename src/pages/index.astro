@@ -1,0 +1,19 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/Navbar.svelte";
+import HeroSlider from "@/components/HeroSlider.svelte";
+import DonationCards from "@/components/DonationCards.svelte";
+import TrustBand from "@/components/TrustBand.svelte";
+import Footer from "@/components/Footer.svelte";
+import { donationPrograms } from "@/data/donations";
+---
+
+<BaseLayout>
+  <Navbar client:load />
+  <main>
+    <HeroSlider client:load />
+    <DonationCards programs={donationPrograms} client:load />
+    <TrustBand client:load />
+  </main>
+  <Footer client:load />
+</BaseLayout>
