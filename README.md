@@ -1,3 +1,7 @@
+# Warning
+
+This project was developed with the help of artificial intelligence. It was automatically generated using publicly available sources.
+
 # Donation Page
 
 Astro, Svelte and TypeScript ile hazırlanmış responsive kurban bağışı frontend'i.
