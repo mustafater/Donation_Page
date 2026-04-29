@@ -9,6 +9,7 @@ import {
   Transaction,
   TransactionBuilder,
 } from "@stellar/stellar-sdk";
+import type { ModuleInterface } from "@creit-tech/stellar-wallets-kit/types";
 
 export const STELLAR_TESTNET = {
   horizonUrl: "https://horizon-testnet.stellar.org",
@@ -19,12 +20,14 @@ export const STELLAR_TESTNET = {
 export const NETWORK_FEE_BUFFER_XLM = 0.00001;
 
 const server = new Horizon.Server(STELLAR_TESTNET.horizonUrl);
-const { getNetworkDetails, isConnected, requestAccess, signTransaction } = freighterApi;
+let kitInitialized = false;
+let walletKit: typeof import("@creit-tech/stellar-wallets-kit/sdk").StellarWalletsKit | null = null;
+let selectedWalletName = "Freighter";
 
 export type WalletErrorCode =
-  | "freighter_unavailable"
-  | "freighter_access_rejected"
-  | "freighter_address_missing"
+  | "wallet_unavailable"
+  | "wallet_rejected"
+  | "wallet_address_missing"
   | "wrong_network"
   | "invalid_recipient"
   | "invalid_amount"
@@ -32,6 +35,8 @@ export type WalletErrorCode =
   | "sign_rejected"
   | "destination_missing"
   | "horizon_error"
+  | "rpc_error"
+  | "contract_error"
   | "unknown";
 
 export class WalletFlowError extends Error {
@@ -48,6 +53,7 @@ export interface WalletSession {
   address: string;
   network: string;
   networkPassphrase: string;
+  walletName: string;
 }
 
 export interface BalanceResult {
@@ -62,30 +68,6 @@ export interface SendPaymentInput {
 
 export interface SendPaymentResult {
   hash: string;
-}
-
-function getFreighterErrorMessage(error: unknown, fallback: string) {
-  if (!error) {
-    return fallback;
-  }
-
-  if (typeof error === "string") {
-    return error;
-  }
-
-  if (typeof error === "object" && "message" in error && typeof error.message === "string") {
-    return error.message;
-  }
-
-  return fallback;
-}
-
-function assertFreighterResponse<T extends { error?: unknown }>(response: T, fallback: string) {
-  if (response.error) {
-    throw new Error(getFreighterErrorMessage(response.error, fallback));
-  }
-
-  return response;
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {
@@ -106,6 +88,30 @@ function readErrorMessage(error: unknown) {
   }
 
   return "";
+}
+
+function getWalletApiErrorMessage(error: unknown, fallback: string) {
+  if (!error) {
+    return fallback;
+  }
+
+  if (typeof error === "string") {
+    return error;
+  }
+
+  if (isObject(error) && typeof error.message === "string") {
+    return error.message;
+  }
+
+  return fallback;
+}
+
+function assertWalletApiResponse<T extends { error?: unknown }>(response: T, fallback: string) {
+  if (response.error) {
+    throw new Error(getWalletApiErrorMessage(response.error, fallback));
+  }
+
+  return response;
 }
 
 function getHorizonResultCodes(error: unknown) {
@@ -158,51 +164,234 @@ export function validateAmount(amount: string) {
   return Number.isFinite(parsed) && parsed > 0 && /^\d+(\.\d{1,7})?$/.test(normalized);
 }
 
-export async function connectFreighter(): Promise<WalletSession> {
-  const connection = assertFreighterResponse(
-    await isConnected(),
-    "Freighter extension could not be checked.",
-  );
+export function formatXlmBalance(balance: string | number | null | undefined, precision = 7) {
+  if (balance === null || balance === undefined || balance === "") {
+    return "-";
+  }
 
-  if (!connection.isConnected) {
-    throw new WalletFlowError(
-      "freighter_unavailable",
-      "Freighter bulunamadı. Lütfen Freighter eklentisinin kurulu, açık ve bu tarayıcıda aktif olduğundan emin ol.",
+  const numeric = Number(balance);
+
+  if (!Number.isFinite(numeric)) {
+    return "-";
+  }
+
+  return numeric.toLocaleString("en-US", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: precision,
+  });
+}
+
+async function ensureWalletKit() {
+  if (typeof window === "undefined") {
+    throw new WalletFlowError("wallet_unavailable", "Wallets can only be used in the browser.");
+  }
+
+  if (kitInitialized && walletKit) {
+    return walletKit;
+  }
+
+  const { StellarWalletsKit } = await import("@creit-tech/stellar-wallets-kit/sdk");
+
+  StellarWalletsKit.init({
+    modules: [createFreighterKitModule()],
+    network: STELLAR_TESTNET.networkPassphrase as never,
+    authModal: {
+      showInstallLabel: true,
+      hideUnsupportedWallets: false,
+    },
+  });
+  walletKit = StellarWalletsKit;
+  kitInitialized = true;
+
+  return StellarWalletsKit;
+}
+
+function createFreighterKitModule(): ModuleInterface {
+  return {
+    moduleType: "HOT_WALLET" as never,
+    productId: "freighter",
+    productName: "Freighter",
+    productUrl: "https://freighter.app/",
+    productIcon:
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23059669'/%3E%3Cpath d='M11 21.5 18.5 29 30 12' fill='none' stroke='white' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E",
+    async isAvailable() {
+      const result = assertWalletApiResponse(
+        await freighterApi.isConnected(),
+        "Freighter extension could not be checked.",
+      );
+
+      return Boolean(result.isConnected);
+    },
+    async getAddress() {
+      const result = assertWalletApiResponse(
+        await freighterApi.requestAccess(),
+        "Freighter access was rejected.",
+      );
+
+      if (!result.address) {
+        throw new WalletFlowError("wallet_address_missing", "Freighter address could not be read.");
+      }
+
+      selectedWalletName = "Freighter";
+
+      return { address: result.address };
+    },
+    async signTransaction(xdr, opts) {
+      const result = assertWalletApiResponse(
+        await freighterApi.signTransaction(xdr, opts),
+        "Transaction signing failed.",
+      );
+
+      return {
+        signedTxXdr: result.signedTxXdr,
+        signerAddress: result.signerAddress,
+      };
+    },
+    async signAuthEntry(authEntry, opts) {
+      const result = assertWalletApiResponse(
+        await freighterApi.signAuthEntry(authEntry, opts),
+        "Auth entry signing failed.",
+      );
+
+      if (!result.signedAuthEntry) {
+        throw new WalletFlowError("sign_rejected", "Auth entry signing was rejected.");
+      }
+
+      return {
+        signedAuthEntry: result.signedAuthEntry,
+        signerAddress: result.signerAddress,
+      };
+    },
+    async signMessage(message, opts) {
+      const result = assertWalletApiResponse(
+        await freighterApi.signMessage(message, opts),
+        "Message signing failed.",
+      );
+
+      if (!result.signedMessage) {
+        throw new WalletFlowError("sign_rejected", "Message signing was rejected.");
+      }
+
+      return {
+        signedMessage: String(result.signedMessage),
+        signerAddress: result.signerAddress,
+      };
+    },
+    async getNetwork() {
+      const result = assertWalletApiResponse(
+        await freighterApi.getNetworkDetails(),
+        "Could not read Freighter network details.",
+      );
+
+      return {
+        network: result.network || STELLAR_TESTNET.name,
+        networkPassphrase: result.networkPassphrase,
+      };
+    },
+  };
+}
+
+function normalizeWalletError(error: unknown): WalletFlowError {
+  if (error instanceof WalletFlowError) {
+    return error;
+  }
+
+  const message = readErrorMessage(error);
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("freighter") ||
+    normalized.includes("extension") ||
+    normalized.includes("undefined") ||
+    normalized.includes("not installed") ||
+    normalized.includes("not connected")
+  ) {
+    return new WalletFlowError(
+      "wallet_unavailable",
+      "Freighter bu tarayıcıda görünmüyor. Codex in-app browser uzantı popup'ını açamayabilir; aynı adresi Freighter kurulu Chrome veya Brave tarayıcıda açıp tekrar dene.",
     );
   }
 
-  let access;
+  if (normalized.includes("closed") || normalized.includes("reject") || normalized.includes("denied")) {
+    return new WalletFlowError("wallet_rejected", message || "Wallet connection was rejected.");
+  }
+
+  if (normalized.includes("not found") || normalized.includes("unavailable") || normalized.includes("not available")) {
+    return new WalletFlowError("wallet_unavailable", message || "No supported Stellar wallet was found.");
+  }
+
+  return new WalletFlowError("unknown", message || "Wallet action failed.");
+}
+
+export async function connectWalletKit(): Promise<WalletSession> {
+  const module = createFreighterKitModule();
+  let access: { address: string };
 
   try {
-    access = assertFreighterResponse(
-      await requestAccess(),
-      "Freighter erişimi onaylanmadı. Cüzdan kilitli olabilir veya izin penceresi kapatılmış olabilir.",
-    );
+    access = await module.getAddress();
   } catch (error) {
-    throw new WalletFlowError("freighter_access_rejected", readErrorMessage(error));
+    throw normalizeWalletError(error);
   }
 
   if (!access.address) {
     throw new WalletFlowError(
-      "freighter_address_missing",
-      "Freighter adresi alınamadı. Cüzdanı açıp tekrar deneyebilirsin.",
+      "wallet_address_missing",
+      "Wallet address could not be read. Open the wallet and try again.",
     );
   }
 
-  const network = assertFreighterResponse(
-    await getNetworkDetails(),
-    "Could not read Freighter network details.",
-  );
+  const network = await module.getNetwork();
 
   if (network.networkPassphrase !== STELLAR_TESTNET.networkPassphrase) {
-    throw new WalletFlowError("wrong_network", "Please switch Freighter to Stellar Testnet.");
+    throw new WalletFlowError("wrong_network", "Please switch your Stellar wallet to Testnet.");
   }
 
   return {
     address: access.address,
     network: network.network || STELLAR_TESTNET.name,
     networkPassphrase: network.networkPassphrase,
+    walletName: selectedWalletName,
   };
+}
+
+export async function disconnectWalletKit() {
+  const kit = await ensureWalletKit();
+  await kit.disconnect();
+}
+
+export async function getWalletNetwork() {
+  let network;
+
+  try {
+    network = await createFreighterKitModule().getNetwork();
+  } catch (error) {
+    throw normalizeWalletError(error);
+  }
+
+  if (network.networkPassphrase !== STELLAR_TESTNET.networkPassphrase) {
+    throw new WalletFlowError("wrong_network", "Please switch your Stellar wallet to Testnet.");
+  }
+
+  return network;
+}
+
+export async function signWithWallet(xdr: string, address: string) {
+  const module = createFreighterKitModule();
+
+  try {
+    return await module.signTransaction(xdr, {
+      address,
+      networkPassphrase: STELLAR_TESTNET.networkPassphrase,
+    });
+  } catch (error) {
+    const normalized = normalizeWalletError(error);
+
+    if (normalized.code === "wallet_rejected") {
+      throw new WalletFlowError("sign_rejected", normalized.message);
+    }
+
+    throw normalized;
+  }
 }
 
 export async function fetchXlmBalance(address: string): Promise<BalanceResult> {
@@ -227,14 +416,7 @@ export async function sendTestnetXlm({
     throw new WalletFlowError("invalid_amount", "Amount must be positive and use up to 7 decimal places.");
   }
 
-  const network = assertFreighterResponse(
-    await getNetworkDetails(),
-    "Could not read Freighter network details.",
-  );
-
-  if (network.networkPassphrase !== STELLAR_TESTNET.networkPassphrase) {
-    throw new WalletFlowError("wrong_network", "Please switch Freighter to Stellar Testnet before sending.");
-  }
+  await getWalletNetwork();
 
   const account = await server.loadAccount(source);
   const transaction = new TransactionBuilder(account, {
@@ -254,13 +436,7 @@ export async function sendTestnetXlm({
   let signed;
 
   try {
-    signed = assertFreighterResponse(
-      await signTransaction(transaction.toXDR(), {
-        address: source,
-        networkPassphrase: STELLAR_TESTNET.networkPassphrase,
-      }),
-      "Transaction signing was rejected or failed.",
-    );
+    signed = await signWithWallet(transaction.toXDR(), source);
   } catch (error) {
     throw new WalletFlowError("sign_rejected", readErrorMessage(error));
   }

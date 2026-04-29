@@ -84,6 +84,7 @@
   {#if open}
     <div class="mobile-panel">
       <div class="container mobile-panel-inner">
+        <WalletNav />
         {#each t.links as link}
           <a href={link.href} onclick={() => (open = false)}>{link.label}</a>
         {/each}

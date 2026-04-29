@@ -2,7 +2,8 @@ import { get, writable } from "svelte/store";
 import {
   NETWORK_FEE_BUFFER_XLM,
   WalletFlowError,
-  connectFreighter,
+  connectWalletKit,
+  disconnectWalletKit,
   fetchXlmBalance,
   sendTestnetXlm,
   shortenAddress,
@@ -54,7 +55,7 @@ export async function connectWallet() {
   walletState.set({ ...initialState, status: "connecting" });
 
   try {
-    const session = await connectFreighter();
+    const session = await connectWalletKit();
     const balance = await fetchXlmBalance(session.address);
 
     walletState.set({
@@ -78,7 +79,8 @@ export async function connectWallet() {
   }
 }
 
-export function disconnectWallet() {
+export async function disconnectWallet() {
+  await disconnectWalletKit().catch(() => undefined);
   walletState.set(initialState);
 }
 
@@ -115,8 +117,8 @@ export async function sendPayment(destination: string, amount: string) {
     walletState.update((state) => ({
       ...state,
       status: "error",
-      error: "Connect Freighter before sending a payment.",
-      errorCode: "freighter_unavailable",
+      error: "Connect a Stellar wallet before sending a payment.",
+      errorCode: "wallet_unavailable",
     }));
     return;
   }

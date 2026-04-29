@@ -1,6 +1,7 @@
 ---
 import BaseLayout from "@/layouts/BaseLayout.astro";
 import Navbar from "@/components/Navbar.svelte";
+import ContractDonationPanel from "@/components/ContractDonationPanel.svelte";
 import WalletTransferPanel from "@/components/WalletTransferPanel.svelte";
 import Footer from "@/components/Footer.svelte";
 
@@ -9,25 +10,25 @@ const programs = {
     title: "Kurban Bağışı",
     amountLabel: "3.950 TL'den başlayan",
     description:
-      "Kurban vekaletinizi Stellar Testnet akışıyla bağış niyetine dönüştürün. Bu sayfa ileride gerçek ödeme ve contract entegrasyonu için ayrılmıştır.",
+      "Kurban vekaletinizi Stellar Testnet akışıyla bağış niyetine dönüştürün. Soroban contract kaydı ve ayrı XLM ödeme denemesi bu sayfada birlikte hazırlanmıştır.",
   },
   adak: {
     title: "Adak Kurbanı",
     amountLabel: "Hızlı vekalet",
     description:
-      "Adağınızı yerine getirme niyetinizi seçtiniz. Testnet XLM akışı, ileride adak bağışı backend ve Web3 kayıtlarına bağlanacak şekilde hazırlanmıştır.",
+      "Adağınızı yerine getirme niyetinizi seçtiniz. Testnet wallet akışı, ileride adak bağışı backend ve Web3 kayıtlarına bağlanacak şekilde hazırlanmıştır.",
   },
   akika: {
     title: "Akika Kurbanı",
     amountLabel: "Aile adına bağış",
     description:
-      "Akika bağışı niyetiniz için Freighter cüzdanınızla Testnet XLM gönderim akışını deneyebilirsiniz.",
+      "Akika bağışı niyetiniz için Stellar cüzdanınızla contract kaydı ve Testnet XLM gönderim akışını deneyebilirsiniz.",
   },
   sukur: {
     title: "Şükür Kurbanı",
     amountLabel: "Paylaşma niyeti",
     description:
-      "Şükür bağışı niyetiniz için güvenli wallet bağlantısı, bakiye görüntüleme ve Testnet XLM transfer paneli hazırdır.",
+      "Şükür bağışı niyetiniz için güvenli wallet bağlantısı, Soroban kayıt, bakiye görüntüleme ve Testnet XLM transfer paneli hazırdır.",
   },
 };
 
@@ -54,6 +55,7 @@ const selectedProgram = programs[selectedKey as keyof typeof programs];
           </div>
         </div>
 
+        <ContractDonationPanel program={selectedKey} client:load />
         <WalletTransferPanel client:load />
       </div>
     </section>

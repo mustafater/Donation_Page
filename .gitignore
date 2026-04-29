@@ -1,6 +1,8 @@
 node_modules/
 dist/
 .astro/
+target/
 .env
 .env.*
+!.env.example
 npm-debug.log*

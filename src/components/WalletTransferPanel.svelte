@@ -12,6 +12,7 @@
   import {
     NETWORK_FEE_BUFFER_XLM,
     STELLAR_TESTNET,
+    formatXlmBalance,
     validateAmount,
     validatePublicKey,
     type WalletErrorCode,
@@ -21,9 +22,9 @@
   const copy = {
     tr: {
       eyebrow: "Stellar Testnet",
-      title: "Freighter ile Testnet XLM bağışı gönder",
-      text: "Freighter cüzdanını Testnet ağına al, bakiyeni gör ve test amaçlı XLM transferi gönder.",
-      install: "Freighter kurulu değilse tarayıcı eklentisini kurup Testnet ağına geçmelisin.",
+      title: "Stellar cüzdan ile Testnet XLM bağışı gönder",
+      text: "Stellar cüzdanını Testnet ağına al, bakiyeni gör ve test amaçlı XLM transferi gönder.",
+      install: "Cüzdan listesinde uygun bir Stellar wallet seçip Testnet ağına geçmelisin.",
       connect: "Cüzdan Bağla",
       connecting: "Bağlanıyor",
       disconnect: "Bağlantıyı Kes",
@@ -40,8 +41,8 @@
       txHash: "İşlem hash'i",
       network: "Ağ",
       explorer: "Explorer'da aç",
-      needConnect: "Transfer göndermek için önce Freighter cüzdanını bağla.",
-      ready: "Form hazır. Freighter imzasıyla Testnet XLM gönderebilirsin.",
+      needConnect: "Transfer göndermek için önce Stellar cüzdanını bağla.",
+      ready: "Form hazır. Cüzdan imzasıyla Testnet XLM gönderebilirsin.",
       feeNote: "Ağ ücreti için küçük bir XLM payı ayrılır.",
       formErrors: {
         recipientRequired: "Alıcı Stellar adresini gir.",
@@ -51,24 +52,26 @@
         insufficientBalance: "Miktar, ağ ücreti payı ayrıldıktan sonra kullanılabilir bakiyeyi aşıyor.",
       },
       errors: {
-        freighter_unavailable: "Freighter bu tarayıcıda bulunamadı. Eklentiyi kurup aktif hale getir.",
-        freighter_access_rejected: "Freighter erişimi onaylanmadı. Cüzdan kilitliyse açıp tekrar dene.",
-        freighter_address_missing: "Freighter adresi alınamadı. Cüzdanı açıp tekrar deneyebilirsin.",
-        wrong_network: "Freighter ağını Stellar Testnet olarak değiştirip tekrar dene.",
+        wallet_unavailable: "Bu tarayıcıda desteklenen Stellar wallet bulunamadı. Wallet kurup tekrar dene.",
+        wallet_rejected: "Cüzdan bağlantısı onaylanmadı. Cüzdan kilitliyse açıp tekrar dene.",
+        wallet_address_missing: "Cüzdan adresi alınamadı. Cüzdanı açıp tekrar deneyebilirsin.",
+        wrong_network: "Cüzdan ağını Stellar Testnet olarak değiştirip tekrar dene.",
         invalid_recipient: "Alıcı adresi geçerli bir Stellar public key değil.",
         invalid_amount: "Miktar pozitif olmalı ve en fazla 7 decimal içermeli.",
         insufficient_balance: "Bu transfer için XLM bakiyesi yetersiz.",
         sign_rejected: "İmzalama penceresi reddedildi veya kapatıldı.",
         destination_missing: "Alıcı Testnet hesabı bulunamadı. Önce alıcı hesabı fund edilmiş olmalı.",
         horizon_error: "İşlem Stellar Testnet'e gönderilemedi. Biraz sonra tekrar dene.",
+        rpc_error: "Stellar RPC yanıt vermedi. Biraz sonra tekrar dene.",
+        contract_error: "Contract işlemi tamamlanamadı. Yapılandırmayı kontrol et.",
         unknown: "İşlem tamamlanamadı. Lütfen bilgileri kontrol edip tekrar dene.",
       } satisfies Record<WalletErrorCode, string>,
     },
     en: {
       eyebrow: "Stellar Testnet",
-      title: "Send Testnet XLM with Freighter",
-      text: "Switch Freighter to Testnet, view your balance, and send a test XLM transfer.",
-      install: "If Freighter is not installed, install the browser extension and switch it to Testnet.",
+      title: "Send Testnet XLM with a Stellar wallet",
+      text: "Switch your Stellar wallet to Testnet, view your balance, and send a test XLM transfer.",
+      install: "Pick a compatible Stellar wallet from the modal and switch it to Testnet.",
       connect: "Connect Wallet",
       connecting: "Connecting",
       disconnect: "Disconnect",
@@ -85,8 +88,8 @@
       txHash: "Transaction hash",
       network: "Network",
       explorer: "Open in explorer",
-      needConnect: "Connect Freighter before sending a transfer.",
-      ready: "Form is ready. You can send Testnet XLM with a Freighter signature.",
+      needConnect: "Connect a Stellar wallet before sending a transfer.",
+      ready: "Form is ready. You can send Testnet XLM with a wallet signature.",
       feeNote: "A small XLM buffer is reserved for the network fee.",
       formErrors: {
         recipientRequired: "Enter a recipient Stellar address.",
@@ -96,16 +99,18 @@
         insufficientBalance: "Amount exceeds the available balance after the network fee buffer.",
       },
       errors: {
-        freighter_unavailable: "Freighter was not found in this browser. Install and enable the extension.",
-        freighter_access_rejected: "Freighter access was not approved. Unlock the wallet and try again.",
-        freighter_address_missing: "Could not read the Freighter address. Open the wallet and try again.",
-        wrong_network: "Switch Freighter to Stellar Testnet and try again.",
+        wallet_unavailable: "No supported Stellar wallet was found in this browser. Install a wallet and try again.",
+        wallet_rejected: "Wallet access was not approved. Unlock the wallet and try again.",
+        wallet_address_missing: "Could not read the wallet address. Open the wallet and try again.",
+        wrong_network: "Switch your wallet to Stellar Testnet and try again.",
         invalid_recipient: "Recipient address is not a valid Stellar public key.",
         invalid_amount: "Amount must be positive and use up to 7 decimal places.",
         insufficient_balance: "The XLM balance is not enough for this transfer.",
         sign_rejected: "The signing prompt was rejected or closed.",
         destination_missing: "Recipient Testnet account was not found. The recipient must be funded first.",
         horizon_error: "The transaction could not be submitted to Stellar Testnet. Try again shortly.",
+        rpc_error: "Stellar RPC did not respond. Try again shortly.",
+        contract_error: "The contract action could not be completed. Check the configuration.",
         unknown: "The transaction could not be completed. Check the details and try again.",
       } satisfies Record<WalletErrorCode, string>,
     },
@@ -196,7 +201,7 @@
     </div>
     <div class="status-box">
       <span>{t.balance}</span>
-      <strong>{$walletState.balance ? `${Number($walletState.balance).toFixed(7)} XLM` : "-"}</strong>
+      <strong>{$walletState.balance ? `${formatXlmBalance($walletState.balance)} XLM` : "-"}</strong>
     </div>
   </div>
 
