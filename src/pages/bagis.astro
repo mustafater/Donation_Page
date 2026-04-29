@@ -1,0 +1,112 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/Navbar.svelte";
+import WalletTransferPanel from "@/components/WalletTransferPanel.svelte";
+import Footer from "@/components/Footer.svelte";
+
+const programs = {
+  qurban: {
+    title: "Kurban Bağışı",
+    amountLabel: "3.950 TL'den başlayan",
+    description:
+      "Kurban vekaletinizi Stellar Testnet akışıyla bağış niyetine dönüştürün. Bu sayfa ileride gerçek ödeme ve contract entegrasyonu için ayrılmıştır.",
+  },
+  adak: {
+    title: "Adak Kurbanı",
+    amountLabel: "Hızlı vekalet",
+    description:
+      "Adağınızı yerine getirme niyetinizi seçtiniz. Testnet XLM akışı, ileride adak bağışı backend ve Web3 kayıtlarına bağlanacak şekilde hazırlanmıştır.",
+  },
+  akika: {
+    title: "Akika Kurbanı",
+    amountLabel: "Aile adına bağış",
+    description:
+      "Akika bağışı niyetiniz için Freighter cüzdanınızla Testnet XLM gönderim akışını deneyebilirsiniz.",
+  },
+  sukur: {
+    title: "Şükür Kurbanı",
+    amountLabel: "Paylaşma niyeti",
+    description:
+      "Şükür bağışı niyetiniz için güvenli wallet bağlantısı, bakiye görüntüleme ve Testnet XLM transfer paneli hazırdır.",
+  },
+};
+
+const programParam = Astro.url.searchParams.get("program");
+const selectedKey = programParam && programParam in programs ? programParam : "qurban";
+const selectedProgram = programs[selectedKey as keyof typeof programs];
+---
+
+<BaseLayout title={`${selectedProgram.title} | Hilal Kurban`}>
+  <Navbar client:load />
+  <main>
+    <section class="section donation-flow">
+      <div class="container">
+        <div class="flow-head">
+          <div>
+            <p class="eyebrow">Stellar Testnet Bağış Akışı</p>
+            <h1 class="section-title">{selectedProgram.title}</h1>
+            <p class="section-copy">{selectedProgram.description}</p>
+          </div>
+          <div class="program-summary">
+            <span>Seçili bağış</span>
+            <strong>{selectedProgram.title}</strong>
+            <small>{selectedProgram.amountLabel}</small>
+          </div>
+        </div>
+
+        <WalletTransferPanel client:load />
+      </div>
+    </section>
+  </main>
+  <Footer client:load />
+</BaseLayout>
+
+<style>
+  .donation-flow {
+    min-height: calc(100vh - 76px);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--secondary) 54%, transparent), transparent 360px),
+      var(--background);
+  }
+
+  .flow-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 320px);
+    gap: 28px;
+    align-items: end;
+    margin-bottom: 28px;
+  }
+
+  .program-summary {
+    display: grid;
+    gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    background: color-mix(in srgb, var(--card) 86%, transparent);
+    box-shadow: var(--shadow);
+  }
+
+  .program-summary span,
+  .program-summary small {
+    color: var(--muted-foreground);
+    font-size: 0.84rem;
+    font-weight: 800;
+  }
+
+  .program-summary strong {
+    color: var(--foreground);
+    font-size: 1.28rem;
+  }
+
+  .program-summary small {
+    color: var(--primary-strong);
+  }
+
+  @media (max-width: 780px) {
+    .flow-head {
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+  }
+</style>

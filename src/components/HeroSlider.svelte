@@ -12,27 +12,27 @@
       next: "Sonraki hikaye",
       show: "hikayeyi göster",
       slides: [
-        {
-          title: "Bir Kurban, Uzak Bir Sofrada Bayram Sevinci",
-          text: "Afrika'da bir aile, bugün kapısının çalınmasını umutla bekliyor. Sizin vekaletinizle kesilen kurban, yalnızca et değil; kardeşlik, paylaşma ve unutulmadığını hissetme sevincidir.",
-          tag: "#KardeşlikSofrası #KurbanBağışı #PaylaşmakBereket",
-          image:
-            "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80",
-        },
-        {
-          title: "Paylaştıkça Çoğalan Bir İyilik",
-          text: "Bağışçının niyeti, ihtiyaç sahibi bir annenin duasında ve çocukların bayram tebessümünde karşılık bulur. Bu iyilik zincirinde sizin de payınız olsun.",
-          tag: "#Birlikteİyilik #HilalKurban #BereketiPaylaş",
-          image:
-            "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1600&q=80",
-        },
-        {
-          title: "Vekaletiniz Güvenle Yola Çıkar",
-          text: "Kurban süreci şeffaf, düzenli ve izlenebilir bir bağış deneyimiyle ilerler. Bugün yapılan bir bağış, yarın bir sofrada umut olur.",
-          tag: "#GüvenliBağış #KurbanVekaleti #UmutOl",
-          image:
-            "https://images.unsplash.com/photo-1490424660416-359912d314b3?auto=format&fit=crop&w=1600&q=80",
-        },
+    {
+      title: "Bir Kurban, Uzak Bir Sofrada Bayram Sevinci",
+      text: "Afrika'da bir aile, bugün kapısının çalınmasını umutla bekliyor. Sizin vekaletinizle kesilen kurban, yalnızca et değil; kardeşlik, paylaşma ve unutulmadığını hissetme sevincidir.",
+      tag: "#KardeşlikSofrası #KurbanBağışı #PaylaşmakBereket",
+      image:
+        "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=1600&q=80",
+    },
+    {
+      title: "Paylaştıkça Çoğalan Bir İyilik",
+      text: "Bağışçının niyeti, ihtiyaç sahibi bir annenin duasında ve çocukların bayram tebessümünde karşılık bulur. Bu iyilik zincirinde sizin de payınız olsun.",
+      tag: "#Birlikteİyilik #HilalKurban #BereketiPaylaş",
+      image:
+        "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?auto=format&fit=crop&w=1600&q=80",
+    },
+    {
+      title: "Vekaletiniz Güvenle Yola Çıkar",
+      text: "Kurban süreci şeffaf, düzenli ve izlenebilir bir bağış deneyimiyle ilerler. Bugün yapılan bir bağış, yarın bir sofrada umut olur.",
+      tag: "#GüvenliBağış #KurbanVekaleti #UmutOl",
+      image:
+        "https://images.unsplash.com/photo-1490424660416-359912d314b3?auto=format&fit=crop&w=1600&q=80",
+    },
       ],
     },
     en: {
@@ -101,19 +101,19 @@
           <h1>{slide.title}</h1>
           <p class="lead">{slide.text}</p>
           <p class="tags">{slide.tag}</p>
-          <div class="hero-actions">
-            <Button href="#bagislar">{t.donate}</Button>
-            <Button href="#guven" variant="outline" class="hero-outline">
-              <ShieldCheck size={18} />
-              {t.process}
-            </Button>
-          </div>
         </div>
       </div>
     </article>
   {/each}
 
   <div class="container hero-controls">
+    <div class="hero-actions">
+      <Button href="#bagislar">{t.donate}</Button>
+      <Button href="#guven" variant="outline" class="hero-outline">
+        <ShieldCheck size={18} />
+        {t.process}
+      </Button>
+    </div>
     <div class="dots" aria-label="Slider sayfaları">
       {#each t.slides as slide, index}
         <button
@@ -161,12 +161,16 @@
   .hero-content {
     position: relative;
     z-index: 2;
-    padding: 72px 0 120px;
+    display: flex;
+    align-items: center;
+    min-height: clamp(610px, 82vh, 760px);
+    padding: 72px 0 210px;
   }
 
   .copy {
     max-width: 710px;
     color: #fff;
+    padding-bottom: 0;
   }
 
   .hero-kicker {
@@ -207,7 +211,8 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.72rem;
-    margin-top: 30px;
+    margin-top: 0;
+    pointer-events: auto;
   }
 
   .hero-outline {
@@ -219,18 +224,20 @@
   .hero-controls {
     position: absolute;
     inset-inline: 0;
-    bottom: 34px;
+    bottom: 44px;
     z-index: 3;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    pointer-events: none;
   }
 
   .dots,
   .arrows {
     display: flex;
     gap: 9px;
+    pointer-events: auto;
   }
 
   .dots button,
@@ -263,17 +270,19 @@
 
   @media (max-width: 720px) {
     .hero {
-      min-height: 660px;
+      min-height: 780px;
     }
 
     .hero-content {
-      padding: 54px 0 126px;
+      min-height: 780px;
+      padding: 54px 0 244px;
     }
 
     .hero-controls {
       align-items: flex-start;
       flex-direction: column;
-      bottom: 24px;
+      bottom: 42px;
+      justify-content: flex-end;
     }
 
     .dots button {

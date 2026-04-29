@@ -2,7 +2,6 @@
   import { Baby, BadgeCheck, Beef, Gift, WalletCards } from "lucide-svelte";
   import Button from "@/components/ui/Button.svelte";
   import Card from "@/components/ui/Card.svelte";
-  import { createDonationIntent } from "@/lib/donation/adapter";
   import { subscribeLocale, type Locale } from "@/lib/i18n";
   import type { DonationProgram } from "@/lib/donation/types";
 
@@ -11,7 +10,6 @@
   };
 
   let { programs }: Props = $props();
-  let selected = $state<string | null>(null);
   let locale = $state<Locale>("tr");
 
   const copy = {
@@ -19,7 +17,6 @@
       eyebrow: "Bağış seçenekleri",
       title: "Niyetinizi güvenle emanet edebileceğiniz kurban programları",
       text: "Her kart tek bir bağış niyetini temsil eder. Bugün mock çalışan bu yapı, ileride backend, wallet ve smart contract çağrılarına aynı veri modeliyle bağlanacak.",
-      ready: "için mock-ready akışı hazır.",
       programs: {
         qurban: {
           title: "Kurban Bağışı",
@@ -55,7 +52,6 @@
       eyebrow: "Donation options",
       title: "Qurban programs you can entrust with confidence",
       text: "Each card represents one donation intention. The mock flow used today is ready to connect to backend, wallet, and smart contract calls through the same data model.",
-      ready: "mock-ready flow is prepared.",
       programs: {
         qurban: {
           title: "Qurban Donation",
@@ -98,15 +94,8 @@
     sukur: Gift,
   };
 
-  async function choose(program: DonationProgram) {
-    await createDonationIntent({ programId: program.id });
-    const programCopy = t.programs[program.id as keyof typeof t.programs];
-    selected = `${programCopy.title} ${t.ready}`;
-  }
-
   $effect(() => subscribeLocale((value) => {
     locale = value;
-    selected = null;
   }));
 </script>
 
@@ -129,17 +118,13 @@
           <p class="amount">{programCopy.amountLabel}</p>
           <h3>{programCopy.title}</h3>
           <p class="description">{programCopy.description}</p>
-          <Button variant="secondary" onclick={() => choose(program)}>
+          <Button variant="secondary" href={`/bagis?program=${program.id}`}>
             <WalletCards size={18} />
             {programCopy.ctaLabel}
           </Button>
         </Card>
       {/each}
     </div>
-
-    {#if selected}
-      <p class="intent-status" role="status">{selected}</p>
-    {/if}
   </div>
 </section>
 
@@ -198,16 +183,6 @@
     margin: 13px 0 22px;
     color: var(--muted-foreground);
     line-height: 1.65;
-  }
-
-  .intent-status {
-    margin: 22px 0 0;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.9rem 1rem;
-    background: var(--secondary);
-    color: var(--secondary-foreground);
-    font-weight: 800;
   }
 
   @media (max-width: 980px) {

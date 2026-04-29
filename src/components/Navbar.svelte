@@ -3,6 +3,7 @@
   import LanguageToggle from "@/components/LanguageToggle.svelte";
   import Button from "@/components/ui/Button.svelte";
   import ThemeToggle from "@/components/ThemeToggle.svelte";
+  import WalletNav from "@/components/WalletNav.svelte";
   import { subscribeLocale, type Locale } from "@/lib/i18n";
 
   const copy = {
@@ -60,6 +61,7 @@
     <div class="actions">
       <ThemeToggle />
       <LanguageToggle />
+      <WalletNav />
       <Button href="#login" variant="ghost" class="login-btn">{t.login}</Button>
       <Button href="#bagislar">{t.donate}</Button>
       <span class="mobile-menu-control">
@@ -104,10 +106,10 @@
 
   .nav {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) auto minmax(260px, 1fr);
+    grid-template-columns: auto minmax(300px, 1fr) auto;
     align-items: center;
     min-height: 76px;
-    gap: 24px;
+    gap: clamp(10px, 1.5vw, 22px);
   }
 
   .brand {
@@ -149,8 +151,10 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 5px;
+    gap: 2px;
+    width: fit-content;
+    justify-self: center;
+    padding: 4px;
     border: 1px solid var(--border);
     border-radius: var(--radius);
     background: color-mix(in srgb, var(--card) 78%, transparent);
@@ -158,7 +162,7 @@
 
   .desktop-links a {
     border-radius: 6px;
-    padding: 0.66rem 0.9rem;
+    padding: 0.62rem 0.74rem;
     color: var(--muted-foreground);
     font-size: 0.92rem;
     font-weight: 800;
@@ -173,7 +177,9 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 0.5rem;
+    gap: 0.38rem;
+    min-width: 0;
+    white-space: nowrap;
   }
 
   .mobile-menu-control {
@@ -199,7 +205,17 @@
     font-weight: 800;
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 1240px) {
+    :global(.login-btn) {
+      display: none;
+    }
+
+    .brand small {
+      display: none;
+    }
+  }
+
+  @media (max-width: 1080px) {
     .nav {
       grid-template-columns: 1fr auto;
     }
