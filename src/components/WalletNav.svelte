@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { LogOut, RefreshCw, Wallet } from "lucide-svelte";
+  import { LogOut, MoreHorizontal, RefreshCw, Wallet } from "lucide-svelte";
   import Button from "@/components/ui/Button.svelte";
   import { formatXlmBalance } from "@/lib/wallet/adapter";
   import { connectWallet, disconnectWallet, refreshBalance, walletState } from "@/lib/wallet/state";
@@ -124,11 +124,20 @@
         variant="outline"
         class="wallet-connect"
         disabled={$walletState.status === "connecting"}
-        aria-expanded={pickerOpen}
-        onclick={() => (pickerOpen = !pickerOpen)}
+        onclick={() => connectSelectedWallet("freighter")}
       >
         <Wallet size={17} />
         {$walletState.status === "connecting" ? t.connecting : t.connect}
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={t.chooseWallet}
+        aria-expanded={pickerOpen}
+        disabled={$walletState.status === "connecting"}
+        onclick={() => (pickerOpen = !pickerOpen)}
+      >
+        <MoreHorizontal size={18} />
       </Button>
 
       {#if pickerOpen}
@@ -177,6 +186,9 @@
 
   .wallet-picker-wrap {
     position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.28rem;
   }
 
   .wallet-picker {
@@ -362,6 +374,8 @@
   }
 
   :global(.mobile-panel) .wallet-picker-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 44px;
     width: 100%;
   }
 

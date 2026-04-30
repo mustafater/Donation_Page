@@ -1,0 +1,131 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/Navbar.svelte";
+import SmallLivestockContractPanel from "@/components/SmallLivestockContractPanel.svelte";
+import WalletTransferPanel from "@/components/WalletTransferPanel.svelte";
+import Footer from "@/components/Footer.svelte";
+---
+
+<BaseLayout title="Küçükbaş Kurban Bağışı | Hilal Kurban">
+  <Navbar client:load />
+  <main>
+    <section class="section livestock-flow">
+      <div class="container">
+        <div class="flow-head">
+          <div>
+            <p class="eyebrow">Küçükbaş kurban</p>
+            <h1 class="section-title">Koyun veya keçi bağış kaydınızı contract'a yazın</h1>
+            <p class="section-copy">
+              Cüzdanınızı Stellar Testnet'e bağlayın, hayvan türünü seçin ve bağış niyetinizi güvenli bir kayıt akışına dönüştürün.
+            </p>
+          </div>
+          <a class="back-link" href="/kurban-secimi">Kurban türünü değiştir</a>
+        </div>
+
+        <div class="flow-grid">
+          <SmallLivestockContractPanel client:load />
+          <aside class="helper-card" aria-label="Küçükbaş akış notları">
+            <p class="eyebrow">Akış notu</p>
+            <h2>Contract kaydı ve XLM transferi ayrı tutulur</h2>
+            <p>
+              Küçükbaş paneli bağış niyetinizi, adet bilgisini ve toplamları kayıt altına alır. Alttaki Testnet XLM paneli ise ödeme denemesi için ayrıca korunur.
+            </p>
+            <ul>
+              <li>Koyun veya keçi seçimi bağış kaydına net şekilde işlenir.</li>
+              <li>Adet ve XLM tutarı gönderimden önce kontrol edilir.</li>
+              <li>Başarılı işlemden sonra işlem hash'i ve güncel toplamlar gösterilir.</li>
+            </ul>
+          </aside>
+        </div>
+
+        <WalletTransferPanel client:load />
+      </div>
+    </section>
+  </main>
+  <Footer client:load />
+</BaseLayout>
+
+<style>
+  .livestock-flow {
+    min-height: calc(100vh - 76px);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--secondary) 55%, transparent), transparent 380px),
+      var(--background);
+  }
+
+  .flow-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 24px;
+    align-items: end;
+    margin-bottom: 28px;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0 16px;
+    background: color-mix(in srgb, var(--card) 80%, transparent);
+    color: var(--foreground);
+    font-weight: 900;
+  }
+
+  .flow-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
+    gap: 18px;
+    align-items: start;
+    margin-bottom: 18px;
+  }
+
+  .helper-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px;
+    background: color-mix(in srgb, var(--card) 94%, transparent);
+    box-shadow: var(--shadow);
+  }
+
+  .helper-card h2 {
+    margin: 0;
+    color: var(--foreground);
+    font-size: 1.35rem;
+    line-height: 1.2;
+  }
+
+  .helper-card p,
+  .helper-card li {
+    color: var(--muted-foreground);
+    line-height: 1.7;
+  }
+
+  .helper-card p {
+    margin: 14px 0 0;
+  }
+
+  .helper-card ul {
+    display: grid;
+    gap: 10px;
+    margin: 18px 0 0;
+    padding-left: 20px;
+  }
+
+  @media (max-width: 980px) {
+    .flow-head,
+    .flow-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .flow-head {
+      align-items: start;
+    }
+
+    .back-link {
+      width: fit-content;
+    }
+  }
+</style>

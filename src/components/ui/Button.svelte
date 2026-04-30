@@ -19,17 +19,18 @@
     variant = "primary",
     size = "md",
     class: className = "",
+    onclick,
     children,
     ...rest
   }: Props = $props();
 </script>
 
 {#if href}
-  <a class={`btn btn-${variant} btn-${size} ${className}`} href={href} {...rest}>
+  <a class={`btn btn-${variant} btn-${size} ${className}`} href={href} onclick={onclick} {...rest}>
     {@render children?.()}
   </a>
 {:else}
-  <button class={`btn btn-${variant} btn-${size} ${className}`} {...rest}>
+  <button class={`btn btn-${variant} btn-${size} ${className}`} onclick={onclick} {...rest}>
     {@render children?.()}
   </button>
 {/if}

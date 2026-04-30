@@ -7,11 +7,13 @@ import {
   nativeToScVal,
   rpc,
   scValToNative,
+  xdr,
 } from "@stellar/stellar-sdk";
 import { CONTRACT_CONFIG } from "./config";
 import { WalletFlowError, getWalletNetwork, signWithWallet } from "@/lib/wallet/adapter";
 
 const STROOPS_PER_XLM = 10_000_000n;
+type ContractArg = xdr.ScVal;
 
 export type ContractStatus = "idle" | "simulating" | "signing" | "pending" | "success" | "fail";
 
@@ -30,6 +32,24 @@ export interface ContractDonationResult {
 export interface DonationTotals {
   programTotalStroops: bigint;
   donorTotalStroops: bigint;
+  count: number;
+}
+
+export type LivestockAnimalType = "sheep" | "goat";
+
+export interface LivestockDonationInput {
+  source: string;
+  program: string;
+  animalType: LivestockAnimalType;
+  units: string;
+  amountXlm: string;
+  memo: string;
+  onStatus?: (status: ContractStatus) => void;
+}
+
+export interface LivestockTotals {
+  amountStroops: bigint;
+  units: number;
   count: number;
 }
 
@@ -74,7 +94,7 @@ function assertContractId() {
 }
 
 function buildInvokeArgs(program: string, donor?: string, amountStroops?: bigint, memo?: string) {
-  const args = [];
+  const args: ContractArg[] = [];
 
   if (donor) {
     args.push(Address.fromString(donor).toScVal());
@@ -93,7 +113,67 @@ function buildInvokeArgs(program: string, donor?: string, amountStroops?: bigint
   return args;
 }
 
-async function buildTransaction(source: string, functionName: string, args: ReturnType<typeof buildInvokeArgs>) {
+function animalTypeToScVal(animalType: LivestockAnimalType) {
+  const variant = animalType === "sheep" ? "Sheep" : "Goat";
+
+  return xdr.ScVal.scvVec([nativeToScVal(variant, { type: "symbol" })]);
+}
+
+function validateUnits(units: string) {
+  return /^[1-9]\d*$/.test(units.trim());
+}
+
+function normalizeLivestockTotals(value: unknown): LivestockTotals {
+  if (value instanceof Map) {
+    return {
+      amountStroops: BigInt(String(value.get("amount_stroops") ?? value.get("amountStroops") ?? 0)),
+      units: Number(value.get("units") ?? 0),
+      count: Number(value.get("count") ?? 0),
+    };
+  }
+
+  const record = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+
+  return {
+    amountStroops: BigInt(String(record.amount_stroops ?? record.amountStroops ?? 0)),
+    units: Number(record.units ?? 0),
+    count: Number(record.count ?? 0),
+  };
+}
+
+function buildLivestockArgs(
+  program: string,
+  animalType: LivestockAnimalType,
+  donor?: string,
+  units?: string,
+  amountStroops?: bigint,
+  memo?: string,
+) {
+  const args: ContractArg[] = [];
+
+  if (donor) {
+    args.push(Address.fromString(donor).toScVal());
+  }
+
+  args.push(nativeToScVal(program, { type: "symbol" }));
+  args.push(animalTypeToScVal(animalType));
+
+  if (units !== undefined) {
+    args.push(nativeToScVal(Number(units), { type: "u32" }));
+  }
+
+  if (amountStroops !== undefined) {
+    args.push(nativeToScVal(amountStroops, { type: "i128" }));
+  }
+
+  if (memo !== undefined) {
+    args.push(nativeToScVal(memo, { type: "string" }));
+  }
+
+  return args;
+}
+
+async function buildTransaction(source: string, functionName: string, args: ContractArg[]) {
   assertContractId();
 
   const account = await server.getAccount(source);
@@ -113,7 +193,7 @@ async function buildTransaction(source: string, functionName: string, args: Retu
     .build();
 }
 
-async function simulateRead<T>(source: string, functionName: string, args: ReturnType<typeof buildInvokeArgs>) {
+async function simulateRead<T>(source: string, functionName: string, args: ContractArg[]) {
   try {
     const tx = await buildTransaction(source, functionName, args);
     const simulation = await server.simulateTransaction(tx);
@@ -205,5 +285,113 @@ export async function recordDonationIntent({
     }
 
     throw new WalletFlowError("contract_error", "Contract donation record could not be submitted.");
+  }
+}
+
+export function validateLivestockUnits(units: string) {
+  return validateUnits(units);
+}
+
+export async function readLivestockTotals(
+  source: string,
+  donor: string | null,
+  program: string,
+  animalType: LivestockAnimalType,
+) {
+  if (!hasContractConfig()) {
+    throw new WalletFlowError(
+      "contract_error",
+      "Contract id is missing. Set PUBLIC_STELLAR_CONTRACT_ID in .env after deployment.",
+    );
+  }
+
+  const readSource = donor || source;
+  const [programTotal, donorTotal, count] = await Promise.all([
+    simulateRead<unknown>(readSource, "get_livestock_total", buildLivestockArgs(program, animalType)),
+    donor
+      ? simulateRead<unknown>(
+          readSource,
+          "get_livestock_donor_total",
+          buildLivestockArgs(program, animalType, donor),
+        )
+      : Promise.resolve(null),
+    simulateRead<number>(readSource, "get_livestock_count", buildLivestockArgs(program, animalType)),
+  ]);
+
+  const normalizedProgramTotal = normalizeLivestockTotals(programTotal);
+  const normalizedDonorTotal = donorTotal ? normalizeLivestockTotals(donorTotal) : normalizeLivestockTotals(null);
+
+  return {
+    programTotal: {
+      ...normalizedProgramTotal,
+      count: Number(count),
+    },
+    donorTotal: normalizedDonorTotal,
+  };
+}
+
+export async function recordLivestockDonation({
+  source,
+  program,
+  animalType,
+  units,
+  amountXlm,
+  memo,
+  onStatus,
+}: LivestockDonationInput): Promise<ContractDonationResult> {
+  await getWalletNetwork();
+
+  if (!validateUnits(units)) {
+    throw new WalletFlowError("invalid_amount", "Units must be a positive integer.");
+  }
+
+  const amountStroops = xlmToStroops(amountXlm);
+
+  try {
+    onStatus?.("simulating");
+    const transaction = await buildTransaction(
+      source,
+      "donate_livestock",
+      buildLivestockArgs(
+        program,
+        animalType,
+        source,
+        units.trim(),
+        amountStroops,
+        memo.trim().slice(0, 120),
+      ),
+    );
+    const prepared = await server.prepareTransaction(transaction);
+
+    onStatus?.("signing");
+    const signed = await signWithWallet(prepared.toXDR(), source);
+    const signedTransaction = new Transaction(signed.signedTxXdr, CONTRACT_CONFIG.networkPassphrase);
+
+    onStatus?.("pending");
+    const sent = await server.sendTransaction(signedTransaction);
+
+    if (sent.status !== "PENDING" && sent.status !== "DUPLICATE") {
+      throw new WalletFlowError("rpc_error", sent.errorResult?.toString() || "RPC rejected the transaction.");
+    }
+
+    const final = await server.pollTransaction(sent.hash, { attempts: 18 });
+
+    if (final.status !== rpc.Api.GetTransactionStatus.SUCCESS) {
+      throw new WalletFlowError("contract_error", "Livestock contract transaction failed on Testnet.");
+    }
+
+    onStatus?.("success");
+
+    return {
+      hash: sent.hash,
+    };
+  } catch (error) {
+    onStatus?.("fail");
+
+    if (error instanceof WalletFlowError) {
+      throw error;
+    }
+
+    throw new WalletFlowError("contract_error", "Livestock donation record could not be submitted.");
   }
 }

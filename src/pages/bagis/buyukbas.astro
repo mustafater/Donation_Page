@@ -1,0 +1,184 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/Navbar.svelte";
+import Footer from "@/components/Footer.svelte";
+---
+
+<BaseLayout title="Büyükbaş Kurban Bağışı | Hilal Kurban">
+  <Navbar client:load />
+  <main>
+    <section class="section coming-soon">
+      <div class="container">
+        <div class="soon-grid">
+          <div class="soon-copy">
+            <p class="eyebrow">Büyükbaş kurban</p>
+            <h1 class="section-title">Büyükbaş hisse akışı hazırlanıyor</h1>
+            <p class="section-copy">
+              Büyükbaş bağış için hisse sayısı, program yönetimi, stok takibi ve contract kayıtları ayrı bir modelle eklenecek. Şimdilik küçükbaş contract akışı hazır.
+            </p>
+            <div class="actions">
+              <a class="primary-link" href="/bagis/kucukbas">Küçükbaş akışına git</a>
+              <a class="outline-link" href="/kurban-secimi">Tür seçimine dön</a>
+            </div>
+          </div>
+
+          <div class="soon-visual" aria-hidden="true">
+            <span class="body"></span>
+            <span class="head"></span>
+            <span class="horn left"></span>
+            <span class="horn right"></span>
+            <span class="leg first"></span>
+            <span class="leg second"></span>
+            <span class="badge">Yakında</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer client:load />
+</BaseLayout>
+
+<style>
+  .coming-soon {
+    min-height: calc(100vh - 76px);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--secondary) 56%, transparent), transparent 380px),
+      var(--background);
+  }
+
+  .soon-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(320px, 0.8fr);
+    gap: 32px;
+    align-items: center;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .primary-link,
+  .outline-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    border-radius: var(--radius);
+    padding: 0 16px;
+    font-weight: 900;
+  }
+
+  .primary-link {
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  .outline-link {
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--card) 76%, transparent);
+    color: var(--foreground);
+  }
+
+  .soon-visual {
+    position: relative;
+    min-height: 420px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--secondary) 80%, var(--card)), color-mix(in srgb, var(--primary) 12%, var(--card))),
+      var(--muted);
+    box-shadow: var(--shadow);
+  }
+
+  .soon-visual::before {
+    position: absolute;
+    inset: auto -10% 0;
+    height: 34%;
+    border-radius: 50% 50% 0 0;
+    background: color-mix(in srgb, var(--primary) 22%, var(--card));
+    content: "";
+  }
+
+  .body {
+    position: absolute;
+    left: 46%;
+    top: 50%;
+    width: 58%;
+    height: 27%;
+    border-radius: 999px 999px 38px 38px;
+    background: color-mix(in srgb, var(--foreground) 21%, var(--card));
+    box-shadow: inset 0 -16px 0 color-mix(in srgb, var(--primary) 14%, transparent);
+    transform: translate(-50%, -50%);
+  }
+
+  .head {
+    position: absolute;
+    left: 68%;
+    top: 41%;
+    width: 20%;
+    aspect-ratio: 1;
+    border-radius: 50% 48% 46% 46%;
+    background: color-mix(in srgb, var(--foreground) 18%, var(--card));
+  }
+
+  .horn {
+    position: absolute;
+    top: 34%;
+    width: 9%;
+    height: 5%;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+
+  .horn.left {
+    left: 66%;
+    transform: rotate(-34deg);
+  }
+
+  .horn.right {
+    left: 77%;
+    transform: rotate(34deg);
+  }
+
+  .leg {
+    position: absolute;
+    top: 59%;
+    width: 5%;
+    height: 22%;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--foreground) 24%, var(--card));
+  }
+
+  .leg.first {
+    left: 36%;
+  }
+
+  .leg.second {
+    left: 54%;
+  }
+
+  .badge {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    border-radius: 999px;
+    padding: 9px 14px;
+    background: var(--accent);
+    color: var(--accent-foreground);
+    font-weight: 900;
+  }
+
+  @media (max-width: 860px) {
+    .soon-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .soon-visual {
+      min-height: 320px;
+    }
+  }
+</style>

@@ -1,0 +1,275 @@
+---
+import BaseLayout from "@/layouts/BaseLayout.astro";
+import Navbar from "@/components/Navbar.svelte";
+import Footer from "@/components/Footer.svelte";
+---
+
+<BaseLayout title="Kurban Türü Seçimi | Hilal Kurban">
+  <Navbar client:load />
+  <main>
+    <section class="section qurban-choice">
+      <div class="container">
+        <div class="choice-head">
+          <p class="eyebrow">Kurban bağışı</p>
+          <h1 class="section-title">Bağışlamak istediğiniz kurban türünü seçin</h1>
+          <p class="section-copy">
+            Küçükbaş bağış akışı Soroban contract kaydıyla hazır. Büyükbaş bağış ekranı ise aynı mimariye bağlanmak üzere hazırlanıyor.
+          </p>
+        </div>
+
+        <div class="choice-grid" aria-label="Kurban türü seçenekleri">
+          <a class="choice-card small" href="/bagis/kucukbas">
+            <div class="visual" aria-hidden="true">
+              <span class="animal-body"></span>
+              <span class="animal-head"></span>
+              <span class="animal-leg first"></span>
+              <span class="animal-leg second"></span>
+              <span class="sun"></span>
+            </div>
+            <div class="choice-content">
+              <span class="choice-kicker">Koyun veya keçi</span>
+              <h2>Küçükbaş</h2>
+              <p>Adet, XLM değeri ve not bilgisiyle küçükbaş bağış niyetinizi contract kayıtlarına yazın.</p>
+              <strong>Küçükbaş seç</strong>
+            </div>
+          </a>
+
+          <a class="choice-card large" href="/bagis/buyukbas">
+            <div class="visual" aria-hidden="true">
+              <span class="animal-body"></span>
+              <span class="animal-head"></span>
+              <span class="animal-horn left"></span>
+              <span class="animal-horn right"></span>
+              <span class="animal-leg first"></span>
+              <span class="animal-leg second"></span>
+              <span class="field"></span>
+            </div>
+            <div class="choice-content">
+              <span class="choice-kicker">Hisse modeli hazırlanıyor</span>
+              <h2>Büyükbaş</h2>
+              <p>Büyükbaş hisse, stok ve program yönetimi için ayrı contract akışı sonraki adımda eklenecek.</p>
+              <strong>Büyükbaş seç</strong>
+            </div>
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <Footer client:load />
+</BaseLayout>
+
+<style>
+  .qurban-choice {
+    min-height: calc(100vh - 76px);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--secondary) 62%, transparent), transparent 390px),
+      var(--background);
+  }
+
+  .choice-head {
+    max-width: 820px;
+    margin-bottom: 34px;
+  }
+
+  .choice-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+  }
+
+  .choice-card {
+    display: grid;
+    grid-template-rows: minmax(260px, 0.9fr) auto;
+    min-height: 560px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--card) 94%, transparent);
+    box-shadow: var(--shadow);
+    transition:
+      transform 180ms ease,
+      border-color 180ms ease,
+      box-shadow 180ms ease;
+  }
+
+  .choice-card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--primary) 70%, var(--border));
+    box-shadow: 0 24px 70px rgba(17, 61, 38, 0.16);
+  }
+
+  .visual {
+    position: relative;
+    min-height: 260px;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--secondary) 76%, var(--card)), color-mix(in srgb, var(--primary) 12%, var(--card))),
+      var(--muted);
+  }
+
+  .visual::before {
+    position: absolute;
+    inset: auto -8% 0;
+    height: 34%;
+    border-radius: 50% 50% 0 0;
+    background: color-mix(in srgb, var(--primary) 24%, var(--card));
+    content: "";
+  }
+
+  .animal-body {
+    position: absolute;
+    left: 50%;
+    top: 47%;
+    width: 45%;
+    height: 28%;
+    border-radius: 999px 999px 34px 34px;
+    background: color-mix(in srgb, var(--card) 88%, var(--primary));
+    box-shadow: inset 0 -14px 0 color-mix(in srgb, var(--primary) 13%, transparent);
+    transform: translate(-50%, -50%);
+  }
+
+  .animal-head {
+    position: absolute;
+    left: 67%;
+    top: 39%;
+    width: 17%;
+    aspect-ratio: 1;
+    border-radius: 50% 50% 48% 48%;
+    background: color-mix(in srgb, var(--card) 78%, var(--primary));
+    box-shadow: inset -8px -8px 0 color-mix(in srgb, var(--primary) 12%, transparent);
+  }
+
+  .animal-leg {
+    position: absolute;
+    top: 58%;
+    width: 4.5%;
+    height: 22%;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--foreground) 20%, var(--card));
+  }
+
+  .animal-leg.first {
+    left: 42%;
+  }
+
+  .animal-leg.second {
+    left: 57%;
+  }
+
+  .small .sun {
+    position: absolute;
+    right: 12%;
+    top: 14%;
+    width: 56px;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .large .animal-body {
+    width: 55%;
+    height: 30%;
+    background: color-mix(in srgb, var(--foreground) 22%, var(--card));
+  }
+
+  .large .animal-head {
+    left: 70%;
+    width: 19%;
+    background: color-mix(in srgb, var(--foreground) 18%, var(--card));
+  }
+
+  .animal-horn {
+    position: absolute;
+    top: 33%;
+    width: 8%;
+    height: 4%;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+
+  .animal-horn.left {
+    left: 68%;
+    transform: rotate(-32deg);
+  }
+
+  .animal-horn.right {
+    left: 78%;
+    transform: rotate(32deg);
+  }
+
+  .large .field {
+    position: absolute;
+    left: 10%;
+    bottom: 13%;
+    width: 34%;
+    height: 10px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--primary) 38%, transparent);
+    box-shadow:
+      34px 18px 0 color-mix(in srgb, var(--primary) 26%, transparent),
+      88px 2px 0 color-mix(in srgb, var(--primary) 22%, transparent);
+  }
+
+  .choice-content {
+    display: grid;
+    gap: 12px;
+    padding: 26px;
+  }
+
+  .choice-kicker {
+    color: var(--primary-strong);
+    font-size: 0.84rem;
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .choice-content h2 {
+    margin: 0;
+    color: var(--foreground);
+    font-size: clamp(1.7rem, 3vw, 2.45rem);
+    line-height: 1.05;
+  }
+
+  .choice-content p {
+    margin: 0;
+    color: var(--muted-foreground);
+    line-height: 1.7;
+  }
+
+  .choice-content strong {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-height: 44px;
+    margin-top: 8px;
+    border-radius: var(--radius);
+    padding: 0 16px;
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+
+  @media (max-width: 820px) {
+    .choice-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .choice-card {
+      min-height: auto;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .choice-card {
+      grid-template-rows: 220px auto;
+    }
+
+    .visual {
+      min-height: 220px;
+    }
+
+    .choice-content {
+      padding: 20px;
+    }
+  }
+</style>

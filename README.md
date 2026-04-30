@@ -23,3 +23,17 @@ npm install
 npm run dev
 npm run build
 ```
+
+## Screenshots
+
+### Home Page
+
+![Hilal Kurban home page](assets/images/readme/home-hero.png)
+
+### Stellar Testnet Transfer
+
+![Stellar Testnet transfer panel](assets/images/readme/stellar-transfer.png)
+
+### Wallet Picker
+
+![Wallet picker menu](assets/images/readme/wallet-picker.png)

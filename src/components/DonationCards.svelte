@@ -118,7 +118,7 @@
           <p class="amount">{programCopy.amountLabel}</p>
           <h3>{programCopy.title}</h3>
           <p class="description">{programCopy.description}</p>
-          <Button variant="secondary" href={`/bagis?program=${program.id}`}>
+          <Button variant="secondary" href={program.id === "qurban" ? "/kurban-secimi" : `/bagis?program=${program.id}`}>
             <WalletCards size={18} />
             {programCopy.ctaLabel}
           </Button>
